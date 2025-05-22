@@ -1,41 +1,40 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import meuIcone from '../assets/taskmaster_logo_symbol-nobg.png';
+import loginVideo from '../assets/logo_animation.mp4'; // seu vídeo aqui
 
 const LoginPage = () => {
-    const [showAnimation, setShowAnimation] = useState(false);
-    const [hideLogin, setHideLogin] = useState(false);
     const navigate = useNavigate();
+    const [showVideo, setShowVideo] = useState(false);
 
     const handleLogin = () => {
-        // Removi setGlow, pois o glow vai rodar sempre
-        setHideLogin(true); // oculta conteúdo
-        setTimeout(() => {
-            setShowAnimation(true); // exibe vídeo
-        }, 500);
+        setShowVideo(true); // mostra o vídeo
     };
 
     const handleVideoEnd = () => {
-        setShowAnimation(false);
-        navigate("/app");
+        navigate("/app"); // navega após o vídeo terminar
     };
+
+    if (showVideo) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-black">
+                <video
+                    src={loginVideo}
+                    autoPlay
+                    onEnded={handleVideoEnd}
+                    className="w-80 h-auto rounded-xl shadow-lg"
+                />
+            </div>
+        );
+    }
 
     return (
         <div className="bg-gradient-to-br from-[#D8432D] via-[#7A1B5E] to-[#3F0C56] min-h-screen flex items-center justify-center">
-
-            <div
-                className={`relative bg-white p-8 rounded-xl shadow-xl w-full max-w-md text-center transition-opacity duration-500
-                    ${hideLogin ? "opacity-0 pointer-events-none" : "opacity-100"}
-                    glow-border
-                `}
-            >
+            <div className="relative bg-white p-8 rounded-xl shadow-xl w-full max-w-md text-center glow-border">
                 <h1 className="text-2xl font-semibold mb-4">Bem-vindo ao</h1>
 
                 <div className="flex items-center justify-center gap-2 mb-2">
-                    <img
-                        src={meuIcone}
-                        alt="Logo TaskMaster"
-                        className="h-24" />
+                    <img src={meuIcone} alt="Logo TaskMaster" className="h-24" />
                     <span className="text-xl font-bold text-gray-800">TaskMaster</span>
                 </div>
 
@@ -46,7 +45,7 @@ const LoginPage = () => {
                 <div className="flex flex-col gap-4">
                     <button
                         onClick={handleLogin}
-                        className="bg-[#e9546b] hover:bg-[#d6445b]shadow-xl text-white font-medium py-2 px-4 rounded-full transition"
+                        className="bg-[#e9546b] hover:bg-[#d6445b] shadow-xl text-white font-medium py-2 px-4 rounded-full transition"
                     >
                         Logar-se
                     </button>
@@ -59,17 +58,6 @@ const LoginPage = () => {
                     </button>
                 </div>
             </div>
-
-            {showAnimation && (
-                <div className="absolute inset-0 bg-black flex items-center justify-center transition-opacity duration-1000">
-                    <video
-                        src="/assets/logo_animation.mp4"
-                        autoPlay
-                        onEnded={handleVideoEnd}
-                        className="w-full h-full object-contain"
-                    />
-                </div>
-            )}
         </div>
     );
 };
