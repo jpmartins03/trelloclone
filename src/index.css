@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@property --border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes border-angle-rotate {
+  from {
+    --border-angle: 0deg;
+  }
+  to {
+    --border-angle: 360deg;
+  }
+}
+
+.glow-border {
+  --border-angle: 0deg;
+
+  border-radius: 16px;
+  border: 4px solid transparent; /* borda mais grossa */
+  position: relative;
+  z-index: 0;
+
+  background:
+    linear-gradient(white, white) padding-box,
+    conic-gradient(
+      from var(--border-angle),
+      #ff7760,  /* vermelho mais claro */
+      #c44abf,  /* magenta forte */
+      #803cc9,  /* roxo saturado */
+      #ff7760
+    ) border-box;
+
+  animation: border-angle-rotate 5s linear infinite;
+  box-shadow:
+    0 0 2px #ff7760,
+    0 0 4px #c44abf,
+    0 0 8px #803cc9;
+}
+
