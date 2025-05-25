@@ -1,18 +1,19 @@
+// src/components/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import meuIcone from '../assets/taskmaster_logo_symbol-nobg.png';
-import loginVideo from '../assets/logo_animation.mp4'; // seu vídeo aqui
+import loginVideo from '../assets/logo_animation.mp4';
 
 const LoginPage = () => {
     const navigate = useNavigate();
     const [showVideo, setShowVideo] = useState(false);
 
     const handleLogin = () => {
-        setShowVideo(true); // mostra o vídeo
+        setShowVideo(true);
     };
 
     const handleVideoEnd = () => {
-        navigate("/app"); // navega após o vídeo terminar
+        navigate("/app");
     };
 
     if (showVideo) {
@@ -29,9 +30,11 @@ const LoginPage = () => {
     }
 
     return (
-        <div className="bg-gradient-to-br from-[#D8432D] via-[#7A1B5E] to-[#3F0C56] min-h-screen flex items-center justify-center">
-            <div className="relative bg-white p-8 rounded-xl shadow-xl w-full max-w-md text-center glow-border">
-                <h1 className="text-2xl font-semibold mb-4">Bem-vindo ao</h1>
+        // Div mais externo para o fundo gradiente e centralização
+        <div className="bg-gradient-to-br from-[#D8432D] via-[#7A1B5E] to-[#3F0C56] min-h-screen flex items-center justify-center p-4">
+            {/* Div do card de login - APENAS UM DESTE */}
+            <div className="relative bg-white p-8 rounded-xl shadow-xl w-full max-w-md text-center glow-border"> {/* */}
+                <h1 className="text-2xl font-semibold mb-4 text-gray-700">Bem-vindo ao</h1>
 
                 <div className="flex items-center justify-center gap-2 mb-2">
                     <img src={meuIcone} alt="Logo TaskMaster" className="h-24" />
