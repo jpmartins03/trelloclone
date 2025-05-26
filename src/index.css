@@ -1,0 +1,117 @@
+/* Certifique-se que estas linhas do Tailwind estão no topo */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos para FilterBar.jsx */
+.filter-button {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1; /* text-slate-300 */
+    border-radius: 6px; /* rounded-md */
+    font-size: 0.875rem; /* text-sm */
+    transition: background-color 0.2s;
+}
+.filter-button:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.filter-button-icon {
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+.filter-button-icon:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.filter-button-clear {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    background-color: rgba(239, 68, 68, 0.1); /* bg-red-500/10 */
+    border: 1px solid rgba(239, 68, 68, 0.3);   /* border-red-500/30 */
+    color: #f87171; /* text-red-400 */
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: background-color 0.2s;
+}
+.filter-button-clear:hover {
+    background-color: rgba(239, 68, 68, 0.2);
+}
+
+.active-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    background-color: #0ea5e9; /* sky-500 */
+    color: white;
+    padding: 2px 8px;
+    border-radius: 9999px; /* rounded-full */
+    font-size: 0.75rem; /* text-xs */
+}
+
+/* Seus outros estilos globais, como para o custom-scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Efeito de borda brilhante para a página de login */
+.glow-border {
+  position: relative;
+  overflow: hidden; /* Para conter o brilho dentro das bordas arredondadas */
+}
+
+.glow-border::before {
+  content: '';
+  position: absolute;
+  top: -50%; /* Ajustado para centralizar corretamente a animação */
+  left: -50%; /* Ajustado para centralizar corretamente a animação */
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    transparent,
+    transparent,
+    transparent,
+    #D8432D, /* Cor inicial do seu gradiente da página de login */
+    #7A1B5E, /* Cor intermediária */
+    #3F0C56, /* Cor final */
+    transparent,
+    transparent,
+    transparent
+  );
+  background-size: 50% 50%; /* Ajuste para controlar a "espessura" do gradiente */
+  z-index: -1; /* Coloca o brilho atrás do conteúdo */
+  animation: rotateGlow 6s linear infinite;
+  transform-origin: center center; /* Garante que a rotação seja pelo centro */
+}
+
+@keyframes rotateGlow {
+  0% {
+    /* O translate(-50%, -50%) no ::before já centraliza o pseudo-elemento de 200%x200%
+       Então a rotação é a única transformação necessária aqui. */
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
