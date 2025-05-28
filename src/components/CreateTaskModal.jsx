@@ -1,5 +1,6 @@
 // src/components/CreateTaskModal.jsx
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom'; // Importação já presente, ótimo!
 import { X } from 'react-feather';
 
 const CreateTaskModal = ({ isOpen, onClose, onSubmit, listId }) => {
@@ -34,14 +35,15 @@ const CreateTaskModal = ({ isOpen, onClose, onSubmit, listId }) => {
 
     const handleModalContentClick = (e) => e.stopPropagation();
 
-    return (
+    // Conteúdo JSX do Modal que será portado
+    const modalContent = (
         <div
             className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50 p-4"
-            onClick={onClose}
+            onClick={onClose} // Permite fechar ao clicar no overlay
         >
             <div
                 className="bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-md text-gray-200 border border-slate-700"
-                onClick={handleModalContentClick}
+                onClick={handleModalContentClick} // Impede que o modal feche ao clicar dentro dele
             >
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-semibold">Criar Tarefa</h2>
@@ -50,26 +52,25 @@ const CreateTaskModal = ({ isOpen, onClose, onSubmit, listId }) => {
                     </button>
                 </div>
                 <form onSubmit={handleSubmit}>
-                    {/* Título */}
                     <div className="mb-4">
                         <label htmlFor="taskTitle" className="block text-sm font-medium text-gray-300 mb-1">Título:</label>
                         <input type="text" id="taskTitle" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-2 rounded bg-slate-700 border border-slate-600 focus:border-sky-500 focus:ring-sky-500 outline-none" required autoFocus />
                     </div>
-                    {/* Descrição */}
                     <div className="mb-4">
                         <label htmlFor="taskDescription" className="block text-sm font-medium text-gray-300 mb-1">Descrição:</label>
                         <textarea id="taskDescription" value={description} onChange={(e) => setDescription(e.target.value)} rows="3" className="w-full p-2 rounded bg-slate-700 border border-slate-600 focus:border-sky-500 focus:ring-sky-500 outline-none"></textarea>
                     </div>
-                    {/* Data de Entrega */}
                     <div className="mb-4">
                         <label htmlFor="taskDueDate" className="block text-sm font-medium text-gray-300 mb-1">Data de Entrega:</label>
                         <input type="text" id="taskDueDate" value={dueDate} onChange={(e) => setDueDate(e.target.value)} placeholder="dd/mm/yy" className="w-full p-2 rounded bg-slate-700 border border-slate-600 focus:border-sky-500 focus:ring-sky-500 outline-none" />
                     </div>
-                    {/* Prioridade */}
                     <div className="mb-6">
                         <label htmlFor="taskPriority" className="block text-sm font-medium text-gray-300 mb-1">Prioridade:</label>
                         <select id="taskPriority" value={priority} onChange={(e) => setPriority(e.target.value)} className="w-full p-2 rounded bg-slate-700 border border-slate-600 focus:border-sky-500 focus:ring-sky-500 outline-none appearance-none">
-                            <option value="Baixa">Baixa</option> <option value="Normal">Normal</option> <option value="Média">Média</option> <option value="Alta">Alta</option>
+                            <option value="Baixa">Baixa</option>
+                            <option value="Normal">Normal</option>
+                            <option value="Média">Média</option>
+                            <option value="Alta">Alta</option>
                         </select>
                     </div>
                     <button type="submit" className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors">Criar Tarefa</button>
@@ -77,5 +78,8 @@ const CreateTaskModal = ({ isOpen, onClose, onSubmit, listId }) => {
             </div>
         </div>
     );
+
+    // Usa ReactDOM.createPortal para renderizar o modalContent diretamente no document.body
+    return ReactDOM.createPortal(modalContent, document.body);
 };
 export default CreateTaskModal;

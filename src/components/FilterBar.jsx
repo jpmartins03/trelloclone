@@ -13,10 +13,13 @@ const FilterBar = ({
     onDateFilterClick,
     onTagsFilterClick,
     onMoreOptionsClick,
-    className // Aceita className para estilização externa se necessário
+    className
 }) => {
     return (
-        <div className={`w-fit max-w-full md:max-w-5xl lg:max-w-6xl p-4 bg-slate-800 rounded-lg shadow border border-slate-700 ${className || ''}`}>
+        // Adicionado w-full aqui para que o max-w-[952px] funcione com mx-auto se o pai não for flex justify-center
+        // Mas como o pai em Main.jsx é flex justify-center, w-fit e max-w-[952px] é melhor.
+        <div className={`w-fit max-w-[952px] p-4 bg-slate-800 rounded-lg shadow-md border border-slate-700 ${className || ''}`}>
+            {/* ... conteúdo interno da FilterBar como antes ... */}
             <div className="flex flex-wrap items-center justify-between gap-y-2 md:gap-x-4">
                 <div className="flex flex-wrap items-center gap-2 md:gap-4">
                     <div className="relative min-w-[200px] sm:max-w-xs flex-auto sm:flex-grow-0">
@@ -48,9 +51,11 @@ const FilterBar = ({
                     </button>
                 </div>
                 <div>
-                    <button onClick={onClearAllFilters} className="filter-button-clear">
-                        <IconX size={16} className="mr-1.5" /> Limpar filtros
-                    </button>
+                    {(Object.values(activeFilters).some(val => val !== null && val !== '') || searchTerm) && (
+                        <button onClick={onClearAllFilters} className="filter-button-clear">
+                            <IconX size={16} className="mr-1.5" /> Limpar filtros
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -79,4 +84,4 @@ const FilterBar = ({
     );
 };
 
-export default FilterBar;
+export default FilterBar;  

@@ -6,21 +6,13 @@ import PinnedListsArea from './PinnedListsArea';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 
 const initialRegularListsData = [
-    { id: `list-initreg-${Date.now().toString()}-1`, title: 'Tarefas Gerais', cards: [] }
+    { id: `list-initreg-${Date.now().toString()}-1`, title: 'Tarefas Iniciais', cards: [] }
 ];
 const initialPinnedListsData = [];
 
-// REMOVA AS CONSTANTES DE ALTURA DAQUI DE FORA, SE ESTIVEREM
-// const PINNED_AREA_COLLAPSED_RESERVED_HEIGHT = 60 + 24; // Esta estava aqui antes
-
 export default function TaskBoard({ currentSearchTerm, currentActiveFilters, sidebarCollapsed }) {
-    // ++ DEFINA AS CONSTANTES DE ALTURA AQUI DENTRO DO COMPONENTE ++
     const PINNED_AREA_HEADER_HEIGHT_APPROX = 60;
-    const PINNED_AREA_CONTENT_MIN_HEIGHT_APPROX = 190 + 16 + 16;
-    const PADDING_BUFFER_MAIN_BOARD_APPROX = 24;
-    // Esta constante é a que será usada para o padding fixo, como você solicitou anteriormente
-    const PINNED_AREA_COLLAPSED_RESERVED_HEIGHT_FOR_PADDING = PINNED_AREA_HEADER_HEIGHT_APPROX + PADDING_BUFFER_MAIN_BOARD_APPROX;
-
+    const PINNED_AREA_COLLAPSED_RESERVED_HEIGHT_FOR_PADDING = PINNED_AREA_HEADER_HEIGHT_APPROX + 24; // Buffer
 
     const [regularLists, setRegularLists] = useState(() => {
         const savedRegular = localStorage.getItem('taskMasterRegularLists');
@@ -63,10 +55,7 @@ export default function TaskBoard({ currentSearchTerm, currentActiveFilters, sid
         const newList = { id: `list-${Date.now().toString()}`, title: listTitle, cards: [] };
         setRegularLists(prevLists => {
             const current = Array.isArray(prevLists) ? prevLists : [];
-            console.log('TaskBoard: handleAddList - prevRegularLists:', JSON.parse(JSON.stringify(current)));
-            const updated = [...current, newList];
-            console.log('TaskBoard: handleAddList - setRegularLists com (updated):', JSON.parse(JSON.stringify(updated)));
-            return updated;
+            return [...current, newList];
         });
     };
 
@@ -87,33 +76,31 @@ export default function TaskBoard({ currentSearchTerm, currentActiveFilters, sid
             console.error("TaskBoard: handleAddCard - Título inválido."); return;
         }
         const newCard = { id: `card-${Date.now().toString()}`, ...taskData };
-        const addCardToList = list => ({ ...list, cards: [...(Array.isArray(list.cards) ? list.cards : []), newCard] });
-
+        const addCardToListFn = list => ({ ...list, cards: [...(Array.isArray(list.cards) ? list.cards : []), newCard] });
         if (pinnedLists.some(l => l.id === listId)) {
-            setPinnedLists(prev => helperFindListAndModify(listId, prev, addCardToList));
+            setPinnedLists(prev => helperFindListAndModify(listId, prev, addCardToListFn));
         } else {
-            setRegularLists(prev => helperFindListAndModify(listId, prev, addCardToList));
+            setRegularLists(prev => helperFindListAndModify(listId, prev, addCardToListFn));
         }
     };
 
     const handleDeleteCard = (listId, cardId) => {
         console.log('TaskBoard: handleDeleteCard chamado com:', { listId, cardId });
-        const deleteCardFromList = list => ({ ...list, cards: (Array.isArray(list.cards) ? list.cards : []).filter(card => card.id !== cardId) });
-
+        const deleteCardFromListFn = list => ({ ...list, cards: (Array.isArray(list.cards) ? list.cards : []).filter(card => card.id !== cardId) });
         if (pinnedLists.some(l => l.id === listId)) {
-            setPinnedLists(prev => helperFindListAndModify(listId, prev, deleteCardFromList));
+            setPinnedLists(prev => helperFindListAndModify(listId, prev, deleteCardFromListFn));
         } else {
-            setRegularLists(prev => helperFindListAndModify(listId, prev, deleteCardFromList));
+            setRegularLists(prev => helperFindListAndModify(listId, prev, deleteCardFromListFn));
         }
     };
 
     const handleUpdateTaskStatus = (listId, cardId, newStatus) => {
-        console.log('TaskBoard: handleUpdateTaskStatus chamado com:', { listId, cardId, newStatus });
-        const updateCardStatusInList = list => ({ ...list, cards: (Array.isArray(list.cards) ? list.cards : []).map(card => card.id === cardId ? { ...card, status: newStatus } : card) });
+        console.log('TaskBoard: handleUpdateTaskStatus com:', { listId, cardId, newStatus });
+        const updateStatusFn = list => ({ ...list, cards: (Array.isArray(list.cards) ? list.cards : []).map(c => c.id === cardId ? { ...c, status: newStatus } : c) });
         if (pinnedLists.some(l => l.id === listId)) {
-            setPinnedLists(prev => helperFindListAndModify(listId, prev, updateCardStatusInList));
+            setPinnedLists(prev => helperFindListAndModify(listId, prev, updateStatusFn));
         } else {
-            setRegularLists(prev => helperFindListAndModify(listId, prev, updateCardStatusInList));
+            setRegularLists(prev => helperFindListAndModify(listId, prev, updateStatusFn));
         }
     };
 
@@ -123,79 +110,88 @@ export default function TaskBoard({ currentSearchTerm, currentActiveFilters, sid
         if (!destination) return;
         if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
-        let currentPinned = Array.isArray(pinnedLists) ? [...pinnedLists] : [];
-        let currentRegular = Array.isArray(regularLists) ? [...regularLists] : [];
+        // Cria cópias dos arrays de estado para manipulação segura
+        let newRegularLists = Array.isArray(regularLists) ? [...regularLists] : [];
+        let newPinnedLists = Array.isArray(pinnedLists) ? [...pinnedLists] : [];
 
         if (type === 'COLUMN') {
-            let movedList;
+            let itemToMove;
             const sourceIsPinned = source.droppableId === 'pinned-lists-area';
             const destinationIsPinned = destination.droppableId === 'pinned-lists-area';
 
-            if (sourceIsPinned) { [movedList] = currentPinned.splice(source.index, 1); }
-            else { [movedList] = currentRegular.splice(source.index, 1); }
+            if (sourceIsPinned) {
+                [itemToMove] = newPinnedLists.splice(source.index, 1);
+            } else {
+                [itemToMove] = newRegularLists.splice(source.index, 1);
+            }
 
-            if (!movedList) { console.error("TaskBoard: onDragEnd - Falha ao encontrar a lista movida."); return; }
+            if (!itemToMove) return;
 
             if (destinationIsPinned) {
-                if (currentPinned.length >= 3 && !sourceIsPinned) {
+                // Verifica o comprimento do array *destino* ANTES de adicionar
+                if (pinnedLists.length >= 3 && !sourceIsPinned) { // Se a origem não for pinned e pinned estiver cheio
                     console.warn("TaskBoard: Área de fixados cheia (máx 3).");
-                    if (!sourceIsPinned) currentRegular.splice(source.index, 0, movedList);
+                    // Não precisa reverter splices aqui, pois as alterações não serão aplicadas ao estado
                     return;
                 }
-                currentPinned.splice(destination.index, 0, movedList);
-                setPinnedLists(currentPinned);
-                if (!sourceIsPinned) setRegularLists(currentRegular);
-            } else {
-                currentRegular.splice(destination.index, 0, movedList);
-                setRegularLists(currentRegular);
-                if (sourceIsPinned) setPinnedLists(currentPinned);
+                newPinnedLists.splice(destination.index, 0, itemToMove);
+            } else { // Destino é regular
+                newRegularLists.splice(destination.index, 0, itemToMove);
             }
+            setRegularLists(newRegularLists);
+            setPinnedLists(newPinnedLists);
             return;
         }
 
         if (type === 'CARD') {
-            const allListsSnapshot = [
-                ...currentPinned.map(l => ({ ...l, __isPinned: true })),
-                ...currentRegular.map(l => ({ ...l, __isPinned: false }))
-            ];
-            let sListMeta = allListsSnapshot.find(l => l.id === source.droppableId);
-            let dListMeta = allListsSnapshot.find(l => l.id === destination.droppableId);
+            const sListId = source.droppableId;
+            const dListId = destination.droppableId;
 
-            if (!sListMeta || !dListMeta) { console.error("TaskBoard: DND CARD - Lista de origem/destino não encontrada no snapshot."); return; }
+            if (sListId === dListId) { // Reordenar na mesma lista
+                const listIsPinned = newPinnedLists.some(l => l.id === sListId);
+                const listArray = listIsPinned ? newPinnedLists : newRegularLists;
+                const listIndex = listArray.findIndex(l => l.id === sListId);
+                if (listIndex === -1 || !Array.isArray(listArray[listIndex].cards)) return;
 
-            if (sListMeta.id === dListMeta.id) {
-                const listArrayToUpdate = sListMeta.__isPinned ? [...currentPinned] : [...currentRegular];
-                const targetListIndex = listArrayToUpdate.findIndex(l => l.id === sListMeta.id);
-                if (targetListIndex === -1 || !Array.isArray(listArrayToUpdate[targetListIndex].cards)) return;
-
-                const newCards = Array.from(listArrayToUpdate[targetListIndex].cards);
+                const newCards = Array.from(listArray[listIndex].cards);
                 const [movedCard] = newCards.splice(source.index, 1);
                 newCards.splice(destination.index, 0, movedCard);
+                listArray[listIndex] = { ...listArray[listIndex], cards: newCards };
 
-                listArrayToUpdate[targetListIndex] = { ...listArrayToUpdate[targetListIndex], cards: newCards };
-                if (sListMeta.__isPinned) setPinnedLists(listArrayToUpdate); else setRegularLists(listArrayToUpdate);
-            } else {
-                let tempSourceListArray = sListMeta.__isPinned ? [...currentPinned] : [...currentRegular];
-                let tempDestListArray = dListMeta.__isPinned ? [...currentPinned] : [...currentRegular];
+                if (listIsPinned) setPinnedLists(listArray);
+                else setRegularLists(listArray);
 
-                const sListIndex = tempSourceListArray.findIndex(l => l.id === sListMeta.id);
-                if (sListMeta.__isPinned === dListMeta.__isPinned) { // Mesma zona original
-                    tempDestListArray = tempSourceListArray;
-                }
-                const dListIndex = tempDestListArray.findIndex(l => l.id === dListMeta.id);
+            } else { // Mover entre listas diferentes
+                const sListIsPinned = newPinnedLists.some(l => l.id === sListId);
+                const dListIsPinned = newPinnedLists.some(l => l.id === dListId);
 
-                if (sListIndex === -1 || dListIndex === -1 || !Array.isArray(tempSourceListArray[sListIndex].cards) || !Array.isArray(tempDestListArray[dListIndex].cards)) return;
+                const sourceListArray = sListIsPinned ? newPinnedLists : newRegularLists;
+                const destListArray = dListIsPinned ? newPinnedLists : newRegularLists; //Pode ser o mesmo array se sListIsPinned === dListIsPinned
 
-                const sourceCards = Array.from(tempSourceListArray[sListIndex].cards);
+                const sListIndex = sourceListArray.findIndex(l => l.id === sListId);
+                const dListIndex = destListArray.findIndex(l => l.id === dListId);
+
+                if (sListIndex === -1 || dListIndex === -1 || !Array.isArray(sourceListArray[sListIndex].cards) || !Array.isArray(destListArray[dListIndex].cards)) return;
+
+                const sourceCards = Array.from(sourceListArray[sListIndex].cards);
                 const [movedCard] = sourceCards.splice(source.index, 1);
-                tempSourceListArray[sListIndex] = { ...tempSourceListArray[sListIndex], cards: sourceCards };
+                sourceListArray[sListIndex] = { ...sourceListArray[sListIndex], cards: sourceCards };
 
-                const destCards = Array.from(tempDestListArray[dListIndex].cards);
+                // Se as listas de origem e destino eram do mesmo array original (ambas pinned ou ambas regular)
+                // E estamos usando a mesma referência de array 'newPinnedLists' ou 'newRegularLists'
+                // Precisamos garantir que o 'dListIndex' ainda seja válido após o splice da lista de origem, ou recalcular.
+                // Para simplificar, se for o mesmo array base (sListIsPinned === dListIsPinned),
+                // o tempDestListArray já reflete a remoção do card da lista de origem se sListId for diferente de dListId
+                const actualDestListArray = (sListIsPinned === dListIsPinned) ? sourceListArray : destListArray;
+                const actualDListIndex = actualDestListArray.findIndex(l => l.id === dListId);
+                if (actualDListIndex === -1) return; // Segurança
+
+                const destCards = Array.from(actualDestListArray[actualDListIndex].cards);
                 destCards.splice(destination.index, 0, movedCard);
-                tempDestListArray[dListIndex] = { ...tempDestListArray[dListIndex], cards: destCards };
+                actualDestListArray[actualDListIndex] = { ...actualDestListArray[actualDListIndex], cards: destCards };
 
-                if (sListMeta.__isPinned) setPinnedLists(tempSourceListArray); else setRegularLists(tempSourceListArray);
-                if (dListMeta.__isPinned) setPinnedLists(tempDestListArray); else setRegularLists(tempDestListArray);
+                setRegularLists(newRegularLists);
+                setPinnedLists(newPinnedLists);
             }
         }
     };
@@ -206,16 +202,10 @@ export default function TaskBoard({ currentSearchTerm, currentActiveFilters, sid
         const activeFiltersToUse = filters || { status: null, priority: null };
         if (searchTermToUse === '' && !activeFiltersToUse.priority && !activeFiltersToUse.status) return currentLists;
 
-        let filteredOutput = JSON.parse(JSON.stringify(currentLists)); // Deep copy
-        if (searchTermToUse !== '') {
-            filteredOutput = filteredOutput.map(list => ({ ...list, cards: (Array.isArray(list.cards) ? list.cards : []).filter(card => card.title.toLowerCase().includes(searchTermToUse) || (card.description && card.description.toLowerCase().includes(searchTermToUse))) }));
-        }
-        if (activeFiltersToUse.priority) {
-            filteredOutput = filteredOutput.map(list => ({ ...list, cards: (Array.isArray(list.cards) ? list.cards : []).filter(card => card.priority === activeFiltersToUse.priority) }));
-        }
-        if (activeFiltersToUse.status) {
-            filteredOutput = filteredOutput.map(list => ({ ...list, cards: (Array.isArray(list.cards) ? list.cards : []).filter(card => card.status === activeFiltersToUse.status) }));
-        }
+        let filteredOutput = JSON.parse(JSON.stringify(currentLists));
+        if (searchTermToUse !== '') { filteredOutput = filteredOutput.map(list => ({ ...list, cards: (Array.isArray(list.cards) ? list.cards : []).filter(card => card.title.toLowerCase().includes(searchTermToUse) || (card.description && card.description.toLowerCase().includes(searchTermToUse))) })); }
+        if (activeFiltersToUse.priority) { filteredOutput = filteredOutput.map(list => ({ ...list, cards: (Array.isArray(list.cards) ? list.cards : []).filter(card => card.priority === activeFiltersToUse.priority) })); }
+        if (activeFiltersToUse.status) { filteredOutput = filteredOutput.map(list => ({ ...list, cards: (Array.isArray(list.cards) ? list.cards : []).filter(card => card.status === activeFiltersToUse.status) })); }
         return filteredOutput;
     };
 
@@ -225,19 +215,16 @@ export default function TaskBoard({ currentSearchTerm, currentActiveFilters, sid
     let displayedRegularLists = filteredRegularLists;
 
     if ((currentSearchTerm || '').trim().toLowerCase() !== '') {
-        const matching = [];
-        const nonMatching = [];
+        const matching = []; const nonMatching = [];
         (Array.isArray(regularLists) ? regularLists : []).forEach(originalList => {
             const hadOriginalSearchMatch = (Array.isArray(originalList.cards) ? originalList.cards : []).some(card => card.title.toLowerCase().includes((currentSearchTerm || '').trim().toLowerCase()) || (card.description && card.description.toLowerCase().includes((currentSearchTerm || '').trim().toLowerCase())));
             const listVersionForDisplay = filteredRegularLists.find(l => l.id === originalList.id);
-            if (listVersionForDisplay) {
-                if (hadOriginalSearchMatch) matching.push(listVersionForDisplay);
-                else nonMatching.push(listVersionForDisplay);
-            }
+            if (listVersionForDisplay) { if (hadOriginalSearchMatch) matching.push(listVersionForDisplay); else nonMatching.push(listVersionForDisplay); }
         });
         displayedRegularLists = [...matching, ...nonMatching];
     }
 
+    // Padding fixo para o rodapé do quadro principal
     const mainBoardPaddingBottom = `${PINNED_AREA_COLLAPSED_RESERVED_HEIGHT_FOR_PADDING}px`;
 
     return (
@@ -248,7 +235,8 @@ export default function TaskBoard({ currentSearchTerm, currentActiveFilters, sid
                     onDeleteList: handleDeleteList,
                     onAddCard: handleAddCard,
                     onDeleteCard: handleDeleteCard,
-                    onUpdateTaskStatus: handleUpdateTaskStatus
+                    onUpdateTaskStatus: handleUpdateTaskStatus,
+                    isPinnedContext: true
                 }}
                 sidebarCollapsed={sidebarCollapsed}
                 isCollapsed={isPinnedAreaCollapsed}
@@ -271,6 +259,7 @@ export default function TaskBoard({ currentSearchTerm, currentActiveFilters, sid
                                 onAddCard={handleAddCard}
                                 onDeleteCard={handleDeleteCard}
                                 onUpdateTaskStatus={handleUpdateTaskStatus}
+                                isPinnedContext={false}
                             />
                         ))}
                         {provided.placeholder}

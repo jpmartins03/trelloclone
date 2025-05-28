@@ -1,18 +1,18 @@
 // src/components/PinnedListsArea.jsx
 import React from 'react';
-import { Droppable } from 'react-beautiful-dnd'; // Ou @hello-pangea/dnd
+import { Droppable } from 'react-beautiful-dnd';
 import ListColumn from './ListColumn';
 import { Star, Layers, ChevronUp, ChevronDown } from 'react-feather';
 
 const PinnedListsArea = ({
     pinnedLists,
     listProps,
-    sidebarCollapsed,
+    sidebarCollapsed, // Esta prop é usada para o paddingLeft
     isCollapsed,
     onToggleCollapse
 }) => {
     const MAX_PINNED_LISTS = 3;
-    const sidebarWidthExpanded = '16rem'; // 256px
+    const sidebarWidthExpanded = '16rem';
     const sidebarWidthCollapsed = '68px';
     const currentSidebarWidth = sidebarCollapsed ? sidebarWidthCollapsed : sidebarWidthExpanded;
 
@@ -25,19 +25,22 @@ const PinnedListsArea = ({
     ${(Array.isArray(pinnedLists) && pinnedLists.length === 0 && !isCollapsed) ? 'items-center justify-center' : ''}`;
 
     return (
-        // Container externo para posicionamento em relação à sidebar
+        // Container externo: fixed, ocupa toda a largura da viewport, mas com padding-left
+        // para empurrar o início do conteúdo para depois da sidebar.
         <div
-            className="fixed bottom-0 z-30"
+            className="fixed bottom-0 left-0 right-0 z-30 pointer-events-none" // z-30 é suficiente se FilterBar é z-20 e não fixa
             style={{
-                left: currentSidebarWidth,
-                right: '0', // Ocupa o espaço restante à direita da sidebar
+                paddingLeft: currentSidebarWidth, // << REINTRODUZIDO PARA ALINHAR COM SIDEBAR
             }}
         >
-            {/* Container interno para definir a largura fixa e centralizar */}
+            {/* Container interno: Este é o bloco visível da PinnedListsArea.
+          Ele terá a largura fixa e será centralizado com mx-auto DENTRO
+          do espaço disponível no pai (que é a viewport menos o paddingLeft).
+      */}
             <div
-                className="mx-auto w-[952px] bg-slate-900/90 backdrop-blur-sm p-3 border-t-2 border-slate-700 shadow-2xl rounded-t-lg"
-            // ^ Substituído max-w-... por w-[952px] ^
+                className="mx-auto w-[952px] bg-slate-900/90 backdrop-blur-sm p-3 border-t-2 border-slate-700 shadow-2xl rounded-t-lg pointer-events-auto"
             >
+                {/* Cabeçalho e conteúdo da PinnedListsArea como antes */}
                 <div className="flex items-center justify-between text-slate-300 mb-2 px-2">
                     <div className="flex items-center">
                         <Star size={18} className="mr-2 text-yellow-400 flex-shrink-0" />
@@ -51,10 +54,8 @@ const PinnedListsArea = ({
                         {isCollapsed ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </button>
                 </div>
-
-                {/* Wrapper da Área de Conteúdo (com transição) */}
                 <div className={contentWrapperClasses}>
-                    <div className={`px-3 pb-3 ${isCollapsed ? 'invisible' : 'visible'}`}> {/* Padding para o conteúdo quando expandido */}
+                    <div className={`px-3 pb-3 ${isCollapsed ? 'invisible' : 'visible'}`}>
                         <Droppable droppableId="pinned-lists-area" direction="horizontal" type="COLUMN">
                             {(provided, snapshot) => (
                                 <div
@@ -71,17 +72,21 @@ const PinnedListsArea = ({
                                                     onAddCard={listProps.onAddCard}
                                                     onDeleteCard={listProps.onDeleteCard}
                                                     onUpdateTaskStatus={listProps.onUpdateTaskStatus}
+                                                    isPinnedContext={listProps.isPinnedContext}
                                                 />
                                             ))}
                                             {provided.placeholder}
-                                            {(Array.isArray(pinnedLists) ? pinnedLists : []).length === 0 && !snapshot.isDraggingOver && (
-                                                <div className="flex flex-col items-center text-slate-500 pointer-events-none w-full"> {/* Adicionado w-full para centralizar placeholder */}
-                                                    <Layers size={48} className="mb-2 opacity-50" />
-                                                    <span>Arraste colunas aqui para fixá-las.</span>
-                                                </div>
-                                            )}
-                                            {/* Outros placeholders para slots vazios se necessário */}
-                                            {/* ... */}
+                                            {(() => {
+                                                const currentPinnedLists = Array.isArray(pinnedLists) ? pinnedLists : [];
+                                                if (currentPinnedLists.length === 0 && !snapshot.isDraggingOver) {
+                                                    return (<div className="flex flex-col items-center text-slate-500 pointer-events-none w-full"> <Layers size={48} className="mb-2 opacity-50" /> <span>Arraste colunas aqui para fixá-las.</span> </div>);
+                                                } else if (currentPinnedLists.length > 0 && currentPinnedLists.length < MAX_PINNED_LISTS && !snapshot.isDraggingOver) {
+                                                    return (<div className="flex flex-1 items-center justify-start text-slate-400 text-sm pl-2 pointer-events-none"> <span>Arraste mais {MAX_PINNED_LISTS - currentPinnedLists.length} aqui.</span> </div>);
+                                                } else if (currentPinnedLists.length >= MAX_PINNED_LISTS && !snapshot.isDraggingOver) {
+                                                    return (<div className="flex flex-1 items-center justify-start text-slate-400 text-sm pl-2 pointer-events-none"> <span>Limite de colunas fixadas atingido.</span> </div>);
+                                                }
+                                                return null;
+                                            })()}
                                         </>
                                     )}
                                 </div>
